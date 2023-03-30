@@ -1,0 +1,21 @@
+{
+  "name": "somebytespic_bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "bot.js",
+  "type": "module",
+  "scripts": {
+    "start": "node bot.js",
+    "dev": "nodemon bot.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "axios": "^1.3.4",
+    "express": "^4.18.2",
+    "fs": "^0.0.1-security",
+    "nodaemon": "^0.0.5",
+    "node-telegram-bot-api": "^0.61.0"
+  }
+}
