@@ -2,7 +2,7 @@ import TelegramBot from "node-telegram-bot-api"
 import axios from "axios"
 
 // Задаем токен бота, полученный от BotFather
-const token = "6167849573:AAHGwKN58S2jSoeUZ_U-SwXO1ozjgT2lhNk"
+const token = "token"
 
 // Создаем экземпляр бота
 const bot = new TelegramBot(token, { polling: true })
