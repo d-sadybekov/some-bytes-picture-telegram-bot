@@ -9,93 +9,77 @@ const bot = new TelegramBot(token, { polling: true })
 
 // Задаем URL сервера и параметры запроса
 const serverUrl = "https://iamtester.ru/api"
-
-const sendGetRequest = async (msg2, Url) => {
-  try {
-    const resp = await axios.get(Url)
-    const data = resp.data
-    console.log(data)
-    bot.sendMessage(
-      msg2.chat.id,
-      "File type: " +
-        JSON.stringify(data.fileType) +
-        " size: " +
-        JSON.stringify(data.requiredSize) +
-        " bytes\n" +
-        JSON.stringify(data.downloadLink).slice(
-          1,
-          JSON.stringify(data.downloadLink).length - 1
-        )
-    )
-  } catch (err) {
-    // Handle Error Here
-    console.error("GET-request error: ", err)
-  }
-}
-
-bot.onText(/\/start/, async (msg) => {
-  const opt = {
-    reply_markup: JSON.stringify({
-      inline_keyboard: [
-        [{ text: "JPG", callback_data: "jpg" }],
-        [{ text: "PNG", callback_data: "png" }],
-        [{ text: "BMP", callback_data: "bmp" }],
-        [{ text: "SVG", callback_data: "svg" }],
-      ],
-    }),
-  }
-  return bot.sendMessage(
+const Start=(msg)=>{
+  bot.sendMessage(
     msg.chat.id,
-    "Hi, i am http://iamtester.ru bot! \nI can generate a picture of a certain type and a determined size in bytes. \nLet's start! Select file type:",
-    opt
+    'For restart bot press "Start" button, or enter "/start" command',
+    {
+      reply_markup: {
+        keyboard: [["/start"]],
+        resize_keyboard: true,
+      },
+    }
+  )
+}
+// Обработчик команды /start
+bot.onText(/\/start/, (msg) => {
+  // Отправляем сообщение с кнопками
+  bot.sendMessage(
+    msg.chat.id,
+    `Hi, ${msg.from.first_name}, i am http://iamtester.ru bot! \nI can generate a picture of a certain type and a determined size in bytes. \nLet's start! Select file type:`,
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "JPG", callback_data: "jpg" }],
+          [{ text: "PNG", callback_data: "png" }],
+          [{ text: "BMP", callback_data: "bmp" }],
+          [{ text: "SVG", callback_data: "svg" }],
+        ],
+      },
+    }
   )
 })
-// Ответ от кнопок
-bot.on("callback_query", function (msg) {
-  console.log(msg.data)
-  const fileType = msg.data
-  const k = ["jpg", "png", "bmp", "svg"]
-  if (k.includes(fileType)) {
-    bot.sendMessage(
-      msg.from.id,
-      "Enter required size in bytes (between 999 and 53000000 bytes):"
-    )
-    //^[0-9]{3,8}$
-    bot.onText(/999/, async (msg2, match) => {
-      console.log(match[0])
-      const size = Number(match[0])
-      if (size >= 999 && size <= 53000000) {
-        const Url = serverUrl + "?fileType=" + fileType + "&size=" + size
-        //console.log(Url)
-        return sendGetRequest(msg2, Url)
-      } else {
-        return { error_bot: "Invalid required file size" }
-      }
-    })
-  } else {
-    return { error_bot: "Invalid required file type" }
-  }
 
-  // Отправляем еще один вопрос пользователю
-  //newQuestion(msg)
+// Обработчик нажатия на кнопки
+bot.on("callback_query", async (query) => {
+  const chatId = query.message.chat.id
+  const action = query.data
+
+  // Отправляем сообщение с просьбой ввести число
+  bot.sendMessage(
+    chatId,
+    "Enter required size in bytes (between 999 and 53000000 bytes):"
+  )
+
+  // Ожидаем ввода числа
+  bot.once("message", async (msg) => {
+    const re = /^(9\d{2}|[1-4]\d{3}|5[0-2]\d{5}|53000000)$/
+    const number = parseInt(msg.text)
+
+    // Проверяем, что число в допустимом диапазоне
+    //if (isNaN(number) || number < 999 || number > 53000000) {
+    if ((!re.test(number))) {
+      
+      bot.sendMessage(chatId, 'Incorrect size, try again')
+      return Start(msg)
+    }
+
+    // Отправляем GET-запрос на удаленный бекэнд
+    const Url = serverUrl + "?" + action + "&size=" + number
+    try {
+      const response = await axios.get(Url)
+      const data = JSON.stringify(response.data.downloadLink)
+      bot.sendMessage(chatId, data.slice(1, data.length - 1))
+      return Start(msg)
+    } catch (error) {
+      console.error(error)
+      bot.sendMessage(chatId, "Some problems, try again.")
+      return Start(msg)
+    }
+  })
 })
 
-// bot.onText(/\/getdata/, async (msg) => {
-//   console.log(msg)
-//   try {
-//     // Отправляем GET-запрос на сервер с параметрами
-//     //const response = await get(serverUrl, { params })
-//     console.log(serverUrl)
-//     const response = await axios.get(serverUrl)
-//     console.log(response.data)
-
-//     // Получаем данные из npm JSON-ответа сервера
-//     const data = response.data
-
-//     // Отправляем сообщение с полученными данными пользователю
-//     bot.sendMessage(msg.chat.id, JSON.stringify(data))
-//   } catch (error) {
-//     // Если произошла ошибка, отправляем сообщение с описанием ошибки
-//     bot.sendMessage(msg.chat.id, "Ошибка: ${error.message}")
-//   }
-// })
+// Обработчик ошибок
+bot.on("polling_error", (error) => {
+  console.error(error)
+})
