@@ -53,7 +53,7 @@ bot.on("callback_query", async (query) => {
 
   // Ожидаем ввода числа
   bot.once("message", async (msg) => {
-    const re = /^(9\d{2}|[1-4]\d{3}|5[0-2]\d{5}|53000000)$/
+    const re = /^(999|[1-4]\d{3,7}|[5-9]\d{3}|[10-49][0-9]{3,6}|5[0-2][0-9]{6}|53000000)$/
     const number = parseInt(msg.text)
 
     // Проверяем, что число в допустимом диапазоне
