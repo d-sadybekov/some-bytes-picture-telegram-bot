@@ -1,8 +1,9 @@
 import TelegramBot from "node-telegram-bot-api"
 import axios from "axios"
+import moment from 'moment'
 
 // Задаем токен бота, полученный от BotFather
-const token = "token"
+const token = "6167849573:AAHGwKN58S2jSoeUZ_U-SwXO1ozjgT2lhNk"
 
 // Создаем экземпляр бота
 const bot = new TelegramBot(token, { polling: true })
@@ -65,6 +66,8 @@ bot.on("callback_query", async (query) => {
     const Url = serverUrl + "?" + action + "&size=" + number
     try {
       const response = await axios.get(Url)
+      const date= new Date() 
+      console.log(moment(date, "DD MM YYYY hh:mm:ss").utcOffset(5),' ',msg.from.first_name,' '+JSON.stringify(response.data.fileType)+' '+JSON.stringify(response.data.requiredSize))
       const data = JSON.stringify(response.data.downloadLink)
       bot.sendMessage(chatId, data.slice(1, data.length - 1))
       return Start(msg)
