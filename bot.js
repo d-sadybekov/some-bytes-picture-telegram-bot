@@ -63,7 +63,7 @@ bot.on("callback_query", async (query) => {
     }
 
     // Отправляем GET-запрос на удаленный бекэнд
-    const Url = serverUrl + "?" + action + "&size=" + number
+    const Url = serverUrl + "?fileType=" + action + "&size=" + number
     try {
       const response = await axios.get(Url)
       const date= new Date() 
